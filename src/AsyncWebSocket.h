@@ -212,6 +212,7 @@ class AsyncWebSocketClient {
 #endif
     void text(const char * message, size_t len);
     void text(const char * message);
+    void text(std::string & message);
     void text(uint8_t * message, size_t len);
     void text(char * message);
     void text(const String &message);
@@ -280,6 +281,7 @@ class AsyncWebSocket: public AsyncWebHandler {
 
     void textAll(const char * message, size_t len);
     void textAll(const char * message);
+    void textAll(std::string & message);
     void textAll(uint8_t * message, size_t len);
     void textAll(char * message);
     void textAll(const String &message);

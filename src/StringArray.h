@@ -48,17 +48,33 @@ class LinkedList {
     class Iterator {
       ItemType* _node;
     public:
-      Iterator(ItemType* current = nullptr) : _node(current) {}
-      Iterator(const Iterator& i) : _node(i._node) {}
-      Iterator& operator ++() { _node = _node->next; return *this; }
-      bool operator != (const Iterator& i) const { return _node != i._node; }
-      const T& operator * () const { return _node->value(); }
-      const T* operator -> () const { return &_node->value(); }
+      Iterator(ItemType* current = nullptr) : _node(current) {
+log_i("Iterator: %p -> %p", this, _node);
+}
+      Iterator(const Iterator& i) : _node(i._node) {
+log_i("Iterator: %p -> %p", this, _node);
+}
+      Iterator& operator ++() {
+log_i("++: %p -> %p, next: %p", this, _node, _node ? _node->next : (void*)-1);
+_node = _node->next;
+return *this; }
+      bool operator != (const Iterator& i) const {
+log_i("!=: %p -> %p/%p = %d", this, _node, i._node, _node != i._node);
+return _node != i._node; }
+      const T& operator * () const {
+log_i("*: %p", this);
+log_i("*: %p -> %p", this, _node);
+return _node->value(); }
+      const T* operator -> () const {
+log_i("->: %p -> %p", this, _node);
+return &_node->value(); }
     };
     
   public:
     typedef const Iterator ConstIterator;
-    ConstIterator begin() const { return ConstIterator(_root); }
+    ConstIterator begin() const {
+log_i("Begin: %p -> %p", this, _root);
+return ConstIterator(_root); }
     ConstIterator end() const { return ConstIterator(nullptr); }
 
     LinkedList(OnRemove onRemove) : _root(nullptr), _onRemove(onRemove) {}
@@ -67,10 +83,12 @@ class LinkedList {
       auto it = new ItemType(t);
       if(!_root){
         _root = it;
+log_i("add %p @root: %p, next: %p", this, it, _root->next);
       } else {
         auto i = _root;
         while(i->next) i = i->next;
         i->next = it;
+log_i("add %p @%p: %p, next: %p", this, i, it, it->next);
       }
     }
     T& front() const {

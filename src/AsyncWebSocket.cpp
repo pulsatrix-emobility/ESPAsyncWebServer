@@ -551,6 +551,7 @@ void AsyncWebSocketClient::_queueMessage(AsyncWebSocketMessage *dataMessage){
       ets_printf("ERROR: Too many messages queued\n");
       delete dataMessage;
   } else {
+log_i("Queue message: %p", dataMessage);
       _messageQueue.add(dataMessage);
   }
   if(_client->canSend())
@@ -560,6 +561,7 @@ void AsyncWebSocketClient::_queueMessage(AsyncWebSocketMessage *dataMessage){
 void AsyncWebSocketClient::_queueControl(AsyncWebSocketControl *controlMessage){
   if(controlMessage == NULL)
     return;
+log_i("Queue control: %p", controlMessage);
   _controlQueue.add(controlMessage);
   if(_client->canSend())
     _runQueue();
@@ -766,6 +768,9 @@ void AsyncWebSocketClient::text(const char * message, size_t len){
 void AsyncWebSocketClient::text(const char * message){
   text(message, strlen(message));
 }
+void AsyncWebSocketClient::text(std::string & message){
+  text(&message[0], message.size());
+}
 void AsyncWebSocketClient::text(uint8_t * message, size_t len){
   text((const char *)message, len);
 }
@@ -854,6 +859,7 @@ AsyncWebSocket::AsyncWebSocket(const String& url)
   ,_enabled(true)
   ,_buffers(LinkedList<AsyncWebSocketMessageBuffer *>([](AsyncWebSocketMessageBuffer *b){ delete b; }))
 {
+log_i("Buffers: %p", &_buffers);
   _eventHandler = NULL;
 }
 
@@ -866,6 +872,7 @@ void AsyncWebSocket::_handleEvent(AsyncWebSocketClient * client, AwsEventType ty
 }
 
 void AsyncWebSocket::_addClient(AsyncWebSocketClient * client){
+log_i("Add client: %p", client);
   _clients.add(client);
 }
 
@@ -950,6 +957,7 @@ void AsyncWebSocket::textAll(AsyncWebSocketMessageBuffer * buffer){
   buffer->lock(); 
   for(const auto& c: _clients){
     if(c->status() == WS_CONNECTED){
+log_i("Queueing for %p", c);
         c->text(buffer);
     }
   }
@@ -1094,6 +1102,9 @@ void AsyncWebSocket::text(uint32_t id, const __FlashStringHelper *message){
 void AsyncWebSocket::textAll(const char * message){
   textAll(message, strlen(message));
 }
+void AsyncWebSocket::textAll(std::string & message){
+  textAll(message.c_str(), message.size());
+}
 void AsyncWebSocket::textAll(uint8_t * message, size_t len){
   textAll((const char *)message, len);
 }
@@ -1158,7 +1169,7 @@ bool AsyncWebSocket::canHandle(AsyncWebServerRequest *request){
   if(!_enabled)
     return false;
   
-  if(request->method() != HTTP_GET || !request->url().equals(_url) || !request->isExpectedRequestedConnType(RCT_WS))
+  if(request->method() != WebRequestMethod::HTTP_GET || !request->url().equals(_url) || !request->isExpectedRequestedConnType(RCT_WS))
     return false;
 
   request->addInterestingHeader(WS_STR_CONNECTION);
@@ -1200,6 +1211,7 @@ AsyncWebSocketMessageBuffer * AsyncWebSocket::makeBuffer(size_t size)
   AsyncWebSocketMessageBuffer * buffer = new AsyncWebSocketMessageBuffer(size); 
   if (buffer) {
     AsyncWebLockGuard l(_lock);
+log_i("make buffer: %p", buffer);
     _buffers.add(buffer);
   }
   return buffer; 
@@ -1211,6 +1223,7 @@ AsyncWebSocketMessageBuffer * AsyncWebSocket::makeBuffer(uint8_t * data, size_t 
   
   if (buffer) {
     AsyncWebLockGuard l(_lock);
+log_i("make buffer: %p", buffer);
     _buffers.add(buffer);
   }
 
@@ -1221,11 +1234,15 @@ void AsyncWebSocket::_cleanBuffers()
 {
   AsyncWebLockGuard l(_lock);
 
+log_i("buffers: %p", &_buffers);
+
   for(AsyncWebSocketMessageBuffer * c: _buffers){
+log_i("buffer is: %p", c);
     if(c && c->canDelete()){
         _buffers.remove(c);
     }
   }
+log_i("completed");
 }
 
 AsyncWebSocket::AsyncWebSocketClientLinkedList AsyncWebSocket::getClients() const {
