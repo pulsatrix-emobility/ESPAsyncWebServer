@@ -1223,7 +1223,6 @@ AsyncWebSocketMessageBuffer * AsyncWebSocket::makeBuffer(uint8_t * data, size_t 
   
   if (buffer) {
     AsyncWebLockGuard l(_lock);
-log_i("make buffer: %p", buffer);
     _buffers.add(buffer);
   }
 
@@ -1234,15 +1233,17 @@ void AsyncWebSocket::_cleanBuffers()
 {
   AsyncWebLockGuard l(_lock);
 
-log_i("buffers: %p", &_buffers);
-
-  for(AsyncWebSocketMessageBuffer * c: _buffers){
-log_i("buffer is: %p", c);
-    if(c && c->canDelete()){
+  bool done{};
+  while(!done) {
+    done = true;
+    for(AsyncWebSocketMessageBuffer * c: _buffers){
+      if(c && c->canDelete()){
         _buffers.remove(c);
+        done = false;
+        break;// start over as the iterator doesn't survive deletes
+      }
     }
   }
-log_i("completed");
 }
 
 AsyncWebSocket::AsyncWebSocketClientLinkedList AsyncWebSocket::getClients() const {

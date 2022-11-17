@@ -21,6 +21,8 @@
 #ifndef ASYNCWEBSOCKET_H_
 #define ASYNCWEBSOCKET_H_
 
+#include <list>
+
 #include <Arduino.h>
 #ifdef ESP32
 #include <AsyncTCP.h>
